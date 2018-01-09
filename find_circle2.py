@@ -19,8 +19,13 @@ if __name__ == '__main__':
                             param1=60,param2=35,minRadius=10,maxRadius=40)
 
     circles = np.uint16(np.around(circles))
-    print circles
+
+    print circles[0][0]
+
     for i in circles[0,:]:
+
+        print i
+
         # draw the outer circle
         cv2.circle(original_image,(i[0],i[1]),i[2],(0,255,0),2)
         # draw the center of the circle
