@@ -3,12 +3,16 @@ import cv2
 import copy
 
 #blue
-_LOWER_COLOR = np.array([80, 50, 50])
-_UPPER_COLOR = np.array([110, 255, 255])
+# _LOWER_COLOR = np.array([80, 50, 50])
+# _UPPER_COLOR = np.array([110, 255, 255])
 
 #red
 # _LOWER_COLOR = np.array([0, 50, 50])
 # _UPPER_COLOR = np.array([10, 255, 255])
+
+#brown
+# _LOWER_COLOR = np.array([10, 50, 50])
+# _UPPER_COLOR = np.array([15, 255, 255])
 
 
 class ParticleFilter:
@@ -69,7 +73,7 @@ class ParticleFilter:
 
 
 def tracking():
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
 
     pf = ParticleFilter()
     pf.initialize()

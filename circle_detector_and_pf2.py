@@ -6,6 +6,9 @@ from PIL import Image
 import copy
 import argparse
 from collections import deque
+import sys
+import termios
+import tty
 
 
 def get_dominant_color(image):
@@ -60,7 +63,6 @@ def hsv_to_bgr(hsv_color):
 def generate_color_range(dominant_hsv_0, s_range):
 
     if dominant_hsv_0 < s_range:
-        # low_s = dominant_hsv1_0
         low_s = 0
     else:
         low_s = dominant_hsv_0-s_range
@@ -74,6 +76,17 @@ def generate_color_range(dominant_hsv_0, s_range):
     _UPPER_COLOR = np.array([high_s,255,255])
 
     return _LOWER_COLOR, _UPPER_COLOR
+
+
+def get_keyinput():
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    try:
+        tty.setcbreak(sys.stdin.fileno())
+        key = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSANOW, old)
+    return key
 
 
 class ParticleFilter:
@@ -90,8 +103,10 @@ class ParticleFilter:
 
     # Need adjustment for tracking object velocity
     def modeling(self):
-        self.Y += np.random.random(self.SAMPLEMAX) * 200 - 100 # 2:1
-        self.X += np.random.random(self.SAMPLEMAX) * 200 - 100
+        # self.Y += np.random.random(self.SAMPLEMAX) * 200 - 100 # 2:1
+        # self.X += np.random.random(self.SAMPLEMAX) * 200 - 100
+        self.Y += np.random.random(self.SAMPLEMAX) * 100 - 50 # 2:1
+        self.X += np.random.random(self.SAMPLEMAX) * 100 - 50
 
     def normalize(self, weight):
         return weight / np.sum(weight)
@@ -138,14 +153,23 @@ class ParticleFilter:
 if __name__ == '__main__':
 
     # camera
-    # cap = cv2.VideoCapture(1)
-    # particle_N = 1000
-    # image_size = (480, 640)
+    # cap = cv2.VideoCapture(0)
+    # particle_N = 200
+    # # image_size = (480, 640)
+    # image_size = (240, 320)
 
     # video
-    cap = cv2.VideoCapture('videos/test/bey4.avi')
+    #29
+    #19
+    #22
+    #25
+    # cap = cv2.VideoCapture('videos/test/bey4.avi')
+    cap = cv2.VideoCapture('videos/test/bey22.avi')
+
+    ret, frame = cap.read()
     particle_N = 200
-    image_size = (230, 320)
+    frame_size = frame.shape
+    image_size = (frame_size[0], frame_size[1])
 
     pf1 = ParticleFilter(particle_N, image_size)
     pf1.initialize()
@@ -158,24 +182,25 @@ if __name__ == '__main__':
     trajectory_points1 = deque(maxlen=trajectory_length)
     trajectory_points2 = deque(maxlen=trajectory_length)
 
-    cv2.namedWindow("detected circles", cv2.WINDOW_NORMAL)
+    # cv2.namedWindow("detected circles", cv2.WINDOW_NORMAL)
     cv2.namedWindow("tracking result", cv2.WINDOW_NORMAL)
 
+    start_flg = False
 
     while True:
 
         ret, frame = cap.read()
 
         if ret == False:
-                break
+            break
 
         original_image = frame
         circle_image = copy.deepcopy(original_image)
         gray_image = cv2.cvtColor(original_image,cv2.COLOR_BGR2GRAY)
-        blur_image = cv2.medianBlur(gray_image,5)
+        blur_image = cv2.medianBlur(gray_image,7)
 
         circles = cv2.HoughCircles(blur_image,cv.CV_HOUGH_GRADIENT,1,40,
-                                   param1=60,param2=35,minRadius=10,maxRadius=40)
+                                   param1=60,param2=40,minRadius=10,maxRadius=40)
 
         if circles is None:
             continue
@@ -189,13 +214,16 @@ if __name__ == '__main__':
             cv2.circle(circle_image,(i[0],i[1]),2,(0,0,255),3)
 
         if len(circles[0,:]) != 2:
-            cv2.imshow("detected circles",circle_image)
+            # cv2.imshow("detected circles",circle_image)
             cv2.imshow("tracking result", original_image)
             if cv2.waitKey(20) & 0xFF == 27:
                 break
+            if not start_flg:
+                key = get_keyinput()
+                start_flg = True
             continue
 
-        cv2.imshow("detected circles",circle_image)
+        # cv2.imshow("detected circles",circle_image)
         cv2.imshow("tracking result", original_image)
 
         # crop image
@@ -263,21 +291,6 @@ if __name__ == '__main__':
         high_bgr_display = np.zeros(size, dtype=np.uint8)
         high_bgr_display[:] = high_bgr1
 
-        # print "dominant bgr"
-        # print dominant_bgr1
-        # print "dominant hsv"
-        # print dominant_hsv1
-        # print
-        # print "lower hsv"
-        # print _LOWER_COLOR1
-        # print "upper hsv"
-        # print _UPPER_COLOR1
-        # print
-
-        # cv2.imshow("cropped image", cropped_image1)
-        # cv2.imshow("dominant", dominant_color_display)
-        # cv2.imshow("low", low_bgr_display)
-        # cv2.imshow("high", high_bgr_display)
 
         while True:
 

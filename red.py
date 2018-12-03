@@ -36,7 +36,10 @@ else:
 while True:
 	# grab the current frame
 	(grabbed, frame) = camera.read()
- 
+
+	frame = cv2.flip(frame,1)
+	frame = cv2.flip(frame,0)
+
 	# if we are viewing a video and we did not grab a frame,
 	# then we have reached the end of the video
 	if args.get("video") and not grabbed:

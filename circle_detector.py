@@ -5,6 +5,9 @@ import colorsys
 from PIL import Image
 import copy
 import argparse
+import sys
+import termios
+import tty
 
 
 def get_dominant_color(image):
@@ -56,9 +59,22 @@ def hsv_to_bgr(hsv_color):
     return [bgr[0], bgr[1], bgr[2]]
 
 
+def get_keyinput():
+    fd = sys.stdin.fileno()
+    old = termios.tcgetattr(fd)
+    try:
+        tty.setcbreak(sys.stdin.fileno())
+        key = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSANOW, old)
+    return key
+
+
 if __name__ == '__main__':
 
     cap = cv2.VideoCapture('videos/test/bey4.avi')
+
+    start_flg = False
 
     while True:
 
@@ -148,5 +164,9 @@ if __name__ == '__main__':
 
         if key == 27:
             break
+
+        if not start_flg:
+            key = get_keyinput()
+            start_flg = True
 
     cap.release()
